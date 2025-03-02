@@ -1,6 +1,6 @@
 {
   "name": "@trenlok/bem-modifier-classes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "TrenLok",
   "description": "BEM modifier classes is a utility for generating modifier classes according to the BEM methodology",
   "type": "module",
