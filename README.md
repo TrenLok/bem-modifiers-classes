@@ -1,4 +1,4 @@
-# BEM modifiers classes 
+# BEM modifier classes 
 
 BEM modifier classes is a utility for generating modifier classes according to the BEM methodology.
 
