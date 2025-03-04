@@ -162,6 +162,24 @@ describe('Test Utility Functions', () => {
       expect(getClassNameFromStringSettings('base', settings, prop)).toBe('base_test_variant');
     });
 
+    it('should be returned undefined instead of the class name', () => {
+      const settings = { modifier: 'test', variants: { value: undefined } } as unknown as string | StringModifierSettings<never>;
+      const prop: PropInfoString = { modifier: 'prop', type: 'string', value: 'value' };
+      expect(getClassNameFromStringSettings('base', settings, prop)).toBe(undefined);
+    });
+
+    it('should return the correct class name based on string settings', () => {
+      const settings = { modifier: 'test', variants: { value: undefined, value3: 'value2' } } as unknown as string | StringModifierSettings<never>;
+      const prop: PropInfoString = { modifier: 'prop', type: 'string', value: 'value3' };
+      expect(getClassNameFromStringSettings('base', settings, prop)).toBe('base_test_value2');
+    });
+
+    it('should return the correct class name based on string settings', () => {
+      const settings = { modifier: 'test', variants: { value: undefined } } as unknown as string | StringModifierSettings<never>;
+      const prop: PropInfoString = { modifier: 'prop', type: 'string', value: 'value2' };
+      expect(getClassNameFromStringSettings('base', settings, prop)).toBe('base_test_value2');
+    });
+
     it('should return the correct class name based on string settings as a string', () => {
       const prop: PropInfoString = { modifier: 'prop', type: 'string', value: 'value' };
       expect(getClassNameFromStringSettings('base', 'test', prop)).toBe('base_test_value');
@@ -284,6 +302,54 @@ describe('Test Main Functions', () => {
           },
         });
         expect(result(props)).toEqual([base, `${base}_color-modifier_red-variant`]);
+      });
+
+      it('should return a class list based on string props and modifier settings', () => {
+        interface TestProps {
+          color: 'red' | 'green';
+        }
+
+        const base = 'base';
+        const props: TestProps = { color: 'red' };
+
+        const result = bmc<TestProps>(base, {
+          modifiers: {
+            color: { modifier: 'custom-color' },
+          },
+        });
+        expect(result(props)).toEqual([base, `${base}_custom-color_red`]);
+      });
+
+      it('should return a class list without modifiers based on string props and modifier settings', () => {
+        interface TestProps {
+          color: 'red' | 'green';
+        }
+
+        const base = 'base';
+        const props: TestProps = { color: 'red' };
+
+        const result = bmc<TestProps>(base, {
+          modifiers: {
+            color: { modifier: 'custom-color', variants: { red: undefined } },
+          },
+        });
+        expect(result(props)).toEqual([base]);
+      });
+
+      it('should return a class list based on string props and modifier settings', () => {
+        interface TestProps {
+          color: 'red' | 'green';
+        }
+
+        const base = 'base';
+        const props: TestProps = { color: 'red' };
+
+        const result = bmc<TestProps>(base, {
+          modifiers: {
+            color: { modifier: 'custom-color', variants: { green: 'green-color' } },
+          },
+        });
+        expect(result(props)).toEqual([base, `${base}_custom-color_red`]);
       });
 
       it('should return a class list based on boolean props', () => {

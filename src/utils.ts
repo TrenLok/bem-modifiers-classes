@@ -108,9 +108,9 @@ export function getClassNameFromStringSettings<T>(
     const modifierFromSettings = settings.modifier ?? stringProp.modifier;
     const valueFromSettings = settings.variants?.[stringProp.value];
 
-    if (!valueFromSettings) return;
+    if (settings.variants && stringProp.value in settings.variants && valueFromSettings === undefined) return;
 
-    return getClassName(base, modifierFromSettings, valueFromSettings);
+    return getClassName(base, modifierFromSettings, valueFromSettings ?? stringProp.value);
   }
 }
 
