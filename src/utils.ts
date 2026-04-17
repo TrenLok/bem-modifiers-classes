@@ -1,13 +1,18 @@
 import type {
+  BooleanModifierDefinition,
   BooleanModifierSettings,
   CustomModifiersSettings,
   ModifiersSettings,
   PropInfo,
   PropInfoBoolean,
   PropInfoString,
-  StringModifiersSettingsType,
+  StringModifierDefinition,
   StringModifierType,
+  StringModifierSettings,
 } from './types';
+
+type NormalizedBooleanModifierSettings = string | BooleanModifierSettings | undefined;
+type NormalizedStringModifierSettings<T extends string | undefined> = string | StringModifierSettings<T> | undefined;
 
 export function toKebabCase(value: string): string {
   const newString = value.match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g)
@@ -73,17 +78,37 @@ export function getBooleanModifierClassName(
   return getClassName(base, key, value);
 }
 
-export function getClassNameFromBooleanSettings(
-  base: string,
-  settings: BooleanModifierSettings | string,
-  propInfo: PropInfoBoolean,
-): string | undefined {
-  if (typeof settings === 'string') {
-    return getClassName(base, settings, getBooleanValueStateDefault(propInfo.value));
+export function normalizeBooleanModifierSettings(settings: BooleanModifierDefinition):
+NormalizedBooleanModifierSettings {
+  if (settings === undefined || settings === false) return;
+  // `true` keeps the prop name and falls back to the default active/inactive states.
+  if (settings === true) return {};
+
+  if (Array.isArray(settings)) {
+    const [modifier, stateIfTrue, stateIfFalse] = settings;
+    return { modifier, stateIfTrue, stateIfFalse };
   }
 
-  if (typeof settings === 'object') {
-    const settingObject = settings as BooleanModifierSettings;
+  return settings as string | BooleanModifierSettings;
+}
+
+export function getClassNameFromBooleanSettings(
+  base: string,
+  settings: BooleanModifierDefinition,
+  propInfo: PropInfoBoolean,
+): string | undefined {
+  if (settings === true) {
+    return getDefaultClassNameFromBoolean(base, propInfo.modifier, propInfo.value);
+  }
+
+  const normalizedSettings = normalizeBooleanModifierSettings(settings);
+
+  if (typeof normalizedSettings === 'string') {
+    return getClassName(base, normalizedSettings, getBooleanValueStateDefault(propInfo.value));
+  }
+
+  if (typeof normalizedSettings === 'object') {
+    const settingObject = normalizedSettings as BooleanModifierSettings;
 
     if (settingObject.modifier && !settingObject.stateIfTrue && !settingObject.stateIfFalse) {
       return getClassName(base, settingObject.modifier, getBooleanValueStateDefault(propInfo.value));
@@ -95,20 +120,47 @@ export function getClassNameFromBooleanSettings(
   return getDefaultClassNameFromBoolean(base, propInfo.modifier, propInfo.value);
 }
 
-export function getClassNameFromStringSettings<T>(
-  base: string,
-  settings: StringModifierType<T, keyof T> | string,
-  stringProp: PropInfoString,
-): string | undefined {
-  if (typeof settings === 'string') {
-    return getClassName(base, settings, stringProp.value);
+export function normalizeStringModifierSettings<T extends string | undefined>(settings: StringModifierDefinition<T>):
+NormalizedStringModifierSettings<T> {
+  if (settings === undefined || settings === false) return;
+  // `true` keeps the original prop name and raw string value.
+  if (settings === true) return {};
+
+  if (Array.isArray(settings)) {
+    const [modifier, variants] = settings;
+    return {
+      modifier,
+      variants: variants as StringModifierSettings<T>['variants'],
+    };
   }
 
-  if (typeof settings === 'object') {
-    const modifierFromSettings = settings.modifier ?? stringProp.modifier;
-    const valueFromSettings = settings.variants?.[stringProp.value];
+  return settings as string | StringModifierSettings<T>;
+}
 
-    if (settings.variants && stringProp.value in settings.variants && valueFromSettings === undefined) return;
+export function getClassNameFromStringSettings<T>(
+  base: string,
+  settings: StringModifierType<T, keyof T> | StringModifierDefinition<string | undefined>,
+  stringProp: PropInfoString,
+): string | undefined {
+  const stringModifierSettings = settings as StringModifierDefinition<string | undefined>;
+  const normalizedSettings = normalizeStringModifierSettings(stringModifierSettings);
+
+  if (typeof normalizedSettings === 'string') {
+    return getClassName(base, normalizedSettings, stringProp.value);
+  }
+
+  if (typeof normalizedSettings === 'object') {
+    const modifierFromSettings = normalizedSettings.modifier ?? stringProp.modifier;
+    const valueFromSettings = normalizedSettings.variants?.[stringProp.value];
+
+    if (
+      normalizedSettings.variants
+      && stringProp.value in normalizedSettings.variants
+      && valueFromSettings === undefined
+    ) {
+      // A matched variant with `undefined` is an explicit opt-out for this value.
+      return;
+    }
 
     return getClassName(base, modifierFromSettings, valueFromSettings ?? stringProp.value);
   }
@@ -116,26 +168,28 @@ export function getClassNameFromStringSettings<T>(
 
 export function getBooleanModifierSettings<T>(
   modifiersSettings: ModifiersSettings<T> | CustomModifiersSettings | undefined,
-  modifier: keyof T,
-): string | BooleanModifierSettings | undefined {
+  modifier: keyof T | string,
+): BooleanModifierDefinition {
   if (
     modifiersSettings
     && typeof modifiersSettings === 'object'
   ) {
-    return modifiersSettings[modifier] as string | BooleanModifierSettings | undefined;
+    const modifierSettings = modifiersSettings[modifier as keyof typeof modifiersSettings];
+    return modifierSettings as BooleanModifierDefinition;
   }
   return undefined;
 }
 
 export function getStringModifiersSettings<T>(
   modifiersSettings: ModifiersSettings<T> | undefined,
-  modifier: keyof T,
-): string | StringModifiersSettingsType<T> | undefined {
+  modifier: keyof T | string,
+): StringModifierDefinition<string | undefined> {
   if (
     modifiersSettings
     && typeof modifiersSettings === 'object'
   ) {
-    return modifiersSettings[modifier] as string | StringModifiersSettingsType<T> | undefined;
+    const modifierSettings = modifiersSettings[modifier as keyof typeof modifiersSettings];
+    return modifierSettings as StringModifierDefinition<string | undefined>;
   }
   return undefined;
 }

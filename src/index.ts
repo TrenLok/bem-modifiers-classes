@@ -1,12 +1,16 @@
 import {
-  BooleanModifierSettings,
-  CustomModifiersSettings,
+  BmcInputSettings,
+  BrandedBooleanModifierSettings,
+  BrandedStringModifierSettings,
+  EmptyModifiers,
+  InferPropsFromModifiers,
+  InferableModifiersSettings,
+  InferredBmcSettings,
+  ModifierPrimitiveValue,
   ModifiersSettings,
   PropInfoBoolean,
   PropInfoString,
   Props,
-  PropsWhitelist,
-  StringModifierSettings,
   StringModifierVariants,
 } from './types';
 import {
@@ -23,27 +27,92 @@ export function booleanModifier(
   modifier?: string,
   stateIfTrue?: string,
   stateIfFalse?: string,
-): BooleanModifierSettings {
-  return { modifier, stateIfTrue, stateIfFalse };
+): BrandedBooleanModifierSettings {
+  return { modifier, stateIfTrue, stateIfFalse } as BrandedBooleanModifierSettings;
 }
 
-export function stringModifier<T extends Record<string, string>>(
+export function flag(
   modifier?: string,
-  variants?: StringModifierVariants<T[keyof T]>,
-): StringModifierSettings<T[keyof T]> {
-  return { modifier, variants } as StringModifierSettings<T[keyof T]>;
+  stateIfTrue?: string,
+  stateIfFalse?: string,
+): BrandedBooleanModifierSettings {
+  return booleanModifier(modifier, stateIfTrue, stateIfFalse);
 }
 
-function processStringProp<T>(
+export function stringModifier<T extends string>(
+  modifier?: string,
+  variants?: StringModifierVariants<T>,
+): BrandedStringModifierSettings<T | undefined>;
+export function stringModifier<T extends object>(
+  modifier?: string,
+  variants?: StringModifierVariants<Extract<T[keyof T], string>>,
+): BrandedStringModifierSettings<Extract<T[keyof T], string> | undefined>;
+export function stringModifier(
+  modifier?: string,
+  variants?: StringModifierVariants<string>,
+): BrandedStringModifierSettings<string | undefined> {
+  return {
+    modifier,
+    variants,
+  } as BrandedStringModifierSettings<string | undefined>;
+}
+
+export function variant<T extends string>(
+  modifier?: string,
+  variants?: StringModifierVariants<T>,
+): BrandedStringModifierSettings<T | undefined>;
+export function variant<T extends object>(
+  modifier?: string,
+  variants?: StringModifierVariants<Extract<T[keyof T], string>>,
+): BrandedStringModifierSettings<Extract<T[keyof T], string> | undefined>;
+export function variant(
+  modifier?: string,
+  variants?: StringModifierVariants<string>,
+): BrandedStringModifierSettings<string | undefined> {
+  return stringModifier(modifier, variants);
+}
+
+type RuntimeModifiersSettings = Record<string, unknown>;
+
+interface RuntimeBmcSettings {
+  modifiers?: RuntimeModifiersSettings;
+  customModifiers?: RuntimeModifiersSettings;
+  whitelist?: readonly string[] | true;
+}
+
+type RuntimeBmcInputSettings = RuntimeBmcSettings | RuntimeModifiersSettings | undefined;
+
+function hasModifierKey(
+  modifiersSettings: Record<string, unknown> | undefined,
+  modifier: string,
+): boolean {
+  return Boolean(modifiersSettings
+    && Object.prototype.hasOwnProperty.call(modifiersSettings, modifier));
+}
+
+function getConfiguredModifierKeys(settings?: {
+  modifiers?: Record<string, unknown>;
+  customModifiers?: Record<string, unknown>;
+}): Set<string> {
+  return new Set([
+    ...Object.keys(settings?.modifiers ?? {}),
+    ...Object.keys(settings?.customModifiers ?? {}),
+  ]);
+}
+
+function processStringProp(
   base: string,
   propInfo: PropInfoString,
-  modifiersSettings: ModifiersSettings<T>,
+  modifiersSettings: Record<string, unknown> | undefined,
 ): string | undefined {
-  const modifierKey = propInfo.modifier as keyof T;
-  const hasModifierKey = modifiersSettings && Object.prototype.hasOwnProperty.call(modifiersSettings, modifierKey);
-  const modifierSettings = getStringModifiersSettings(modifiersSettings, modifierKey);
+  const modifierSettings = getStringModifiersSettings(
+    modifiersSettings as ModifiersSettings<Record<string, string>>,
+    propInfo.modifier,
+  );
+  const isConfiguredModifier = hasModifierKey(modifiersSettings, propInfo.modifier);
 
-  if (hasModifierKey && !modifierSettings) {
+  // A configured key with `undefined` disables class generation for that prop.
+  if (isConfiguredModifier && !modifierSettings) {
     return;
   }
 
@@ -54,16 +123,19 @@ function processStringProp<T>(
   return getClassName(base, propInfo.modifier, propInfo.value);
 }
 
-function processBooleanProp<T>(
+function processBooleanProp(
   base: string,
   propInfo: PropInfoBoolean,
-  modifiersSettings: ModifiersSettings<T> | CustomModifiersSettings,
+  modifiersSettings: Record<string, unknown> | undefined,
 ): string | undefined {
-  const modifierSettings = getBooleanModifierSettings(modifiersSettings, propInfo.modifier as keyof T);
-  const hasModifierKey = modifiersSettings
-    && Object.prototype.hasOwnProperty.call(modifiersSettings, propInfo.modifier);
+  const modifierSettings = getBooleanModifierSettings(
+    modifiersSettings as ModifiersSettings<Record<string, boolean>>,
+    propInfo.modifier,
+  );
+  const isConfiguredModifier = hasModifierKey(modifiersSettings, propInfo.modifier);
 
-  if (hasModifierKey && !modifierSettings) {
+  // A configured key with `undefined` disables class generation for that prop.
+  if (isConfiguredModifier && !modifierSettings) {
     return;
   }
 
@@ -74,32 +146,94 @@ function processBooleanProp<T>(
   }
 }
 
-export function bmc<T extends object>(
+function isBmcSettings(settings: RuntimeBmcInputSettings): settings is RuntimeBmcSettings {
+  if (!settings || typeof settings !== 'object' || Array.isArray(settings)) {
+    return false;
+  }
+
+  return (
+    'modifiers' in settings
+    || 'customModifiers' in settings
+    || 'whitelist' in settings
+  );
+}
+
+function normalizeBmcSettings(settings: RuntimeBmcInputSettings): RuntimeBmcSettings | undefined {
+  if (!settings) return undefined;
+  if (isBmcSettings(settings)) return settings;
+
+  // Direct shorthand (`bmc('block', { size: true })`) is treated as
+  // `{ modifiers, whitelist: true }` to avoid leaking unrelated props into classes.
+  return {
+    modifiers: settings,
+    whitelist: true,
+  };
+}
+
+export function bmc<T extends object, TCustom extends Record<string, ModifierPrimitiveValue> = EmptyModifiers>(
   base: string,
-  settings?: {
-    modifiers?: ModifiersSettings<T>;
-    customModifiers?: CustomModifiersSettings;
-    whitelist?: PropsWhitelist<T>;
-  },
+  settings?: BmcInputSettings<T, TCustom>,
+): (props: Props<T> & Partial<TCustom>) => string[];
+export function bmc<const TModifiers extends InferableModifiersSettings>(
+  base: string,
+  modifiers: TModifiers,
+): (props: Partial<InferPropsFromModifiers<TModifiers>>) => string[];
+export function bmc<
+  const TModifiers extends InferableModifiersSettings,
+  const TCustomModifiers extends InferableModifiersSettings = EmptyModifiers,
+>(
+  base: string,
+  settings: InferredBmcSettings<TModifiers, TCustomModifiers>,
+): (props: Partial<InferPropsFromModifiers<TModifiers> & InferPropsFromModifiers<TCustomModifiers>>) => string[];
+export function bmc(
+  base: string,
+  settings?: unknown,
 ) {
-  return (props: Props<T> | Partial<Record<string, boolean>>): string[] => {
-    const propsInfo = getPropsInfo(props);
+  const normalizedSettings = normalizeBmcSettings(settings as RuntimeBmcInputSettings);
+
+  return (props: unknown): string[] => {
+    const propsInfo = getPropsInfo(props as Record<string, unknown>);
     const classList: string[] = [base];
+    const configuredModifierKeys = normalizedSettings?.whitelist === true
+      ? getConfiguredModifierKeys({
+          modifiers: normalizedSettings?.modifiers as Record<string, unknown> | undefined,
+          customModifiers: normalizedSettings?.customModifiers as Record<string, unknown> | undefined,
+        })
+      : undefined;
 
     for (const propInfo of propsInfo) {
-      const isInCustomModifiers = settings?.customModifiers && propInfo.modifier in settings.customModifiers;
+      const isInModifiers = hasModifierKey(
+        normalizedSettings?.modifiers as Record<string, unknown> | undefined,
+        propInfo.modifier,
+      );
+      const isInCustomModifiers = hasModifierKey(
+        normalizedSettings?.customModifiers as Record<string, unknown> | undefined,
+        propInfo.modifier,
+      );
+      // When both sections contain the same key, prefer `modifiers` because it is the primary API.
+      const activeModifierSettings = isInModifiers
+        ? normalizedSettings?.modifiers
+        : (isInCustomModifiers
+            ? normalizedSettings?.customModifiers
+            : undefined);
 
-      if (
-        settings?.whitelist !== undefined
-        && !isInCustomModifiers
-        && !settings?.whitelist.includes(propInfo.modifier)
-      ) {
-        continue;
+      if (normalizedSettings?.whitelist !== undefined) {
+        if (normalizedSettings.whitelist === true) {
+          if (!configuredModifierKeys?.has(propInfo.modifier)) {
+            continue;
+          }
+        } else if (!isInCustomModifiers && !normalizedSettings.whitelist.includes(propInfo.modifier)) {
+          continue;
+        }
       }
 
       if (propInfo.type === 'string') {
         const stringProp = propInfo as PropInfoString;
-        const className = processStringProp(base, stringProp, settings?.modifiers);
+        const className = processStringProp(
+          base,
+          stringProp,
+          activeModifierSettings as Record<string, unknown> | undefined,
+        );
 
         if (!className) continue;
         classList.push(className);
@@ -107,13 +241,11 @@ export function bmc<T extends object>(
 
       if (propInfo.type === 'boolean') {
         const booleanProp = propInfo as PropInfoBoolean;
-        let className: string | undefined;
-
-        if (settings?.customModifiers && propInfo.modifier in settings.customModifiers) {
-          className = processBooleanProp(base, booleanProp, settings.customModifiers);
-        } else {
-          className = processBooleanProp(base, booleanProp, settings?.modifiers);
-        }
+        const className = processBooleanProp(
+          base,
+          booleanProp,
+          activeModifierSettings as Record<string, unknown> | undefined,
+        );
 
         if (!className) continue;
         classList.push(className);

@@ -7,7 +7,9 @@ import {
 
 import {
   booleanModifier,
+  flag,
   stringModifier,
+  variant,
   bmc,
 } from '../src';
 import {
@@ -136,6 +138,11 @@ describe('Test Utility Functions', () => {
   });
 
   describe('getClassNameFromBooleanSettings', () => {
+    it('should return the default class name for boolean shorthand true', () => {
+      const prop: PropInfoBoolean = { modifier: 'prop', type: 'boolean', value: true };
+      expect(getClassNameFromBooleanSettings('base', true, prop)).toBe('base_prop_active');
+    });
+
     it('should return the correct class name based on boolean settings', () => {
       const settings = { modifier: 'test' };
       const prop: PropInfoBoolean = { modifier: 'prop', type: 'boolean', value: true };
@@ -156,6 +163,11 @@ describe('Test Utility Functions', () => {
   });
 
   describe('getClassNameFromStringSettings', () => {
+    it('should return the default class name for string shorthand true', () => {
+      const prop: PropInfoString = { modifier: 'prop', type: 'string', value: 'value' };
+      expect(getClassNameFromStringSettings('base', true, prop)).toBe('base_prop_value');
+    });
+
     it('should return the correct class name based on string settings', () => {
       const settings = { modifier: 'test', variants: { value: 'variant' } } as unknown as string | StringModifierSettings<never>;
       const prop: PropInfoString = { modifier: 'prop', type: 'string', value: 'value' };
@@ -203,6 +215,10 @@ describe('Test Utility Functions', () => {
 
 describe('Test Main Functions', () => {
   describe('booleanModifier', () => {
+    it('should return the same config from flag shorthand', () => {
+      expect(flag('state', 'active', 'inactive')).toEqual(booleanModifier('state', 'active', 'inactive'));
+    });
+
     it('should return a BooleanModifierSettings object', () => {
       const result = booleanModifier('testModifier', 'active', 'inactive');
       expect(result).toEqual({
@@ -241,6 +257,10 @@ describe('Test Main Functions', () => {
   });
 
   describe('stringModifierSettings', () => {
+    it('should return the same config from variant shorthand', () => {
+      expect(variant('theme', { dark: 'night' })).toEqual(stringModifier('theme', { dark: 'night' }));
+    });
+
     it('should return a StringModifierSettings object', () => {
       const result = stringModifier('testModifier', { variant1: 'value1' });
       expect(result).toEqual({
@@ -436,6 +456,27 @@ describe('Test Main Functions', () => {
     });
 
     describe('whitelist', () => {
+      it('should use the configured modifier keys as whitelist when whitelist is true', () => {
+        interface TestProps {
+          color: string;
+          href: string;
+          isActive: boolean;
+        }
+
+        const base = 'base';
+        const props: TestProps = { color: 'red', href: 'href', isActive: true };
+
+        const result = bmc<TestProps>(base, {
+          modifiers: {
+            color: true,
+            isActive: ['state', 'active'],
+          },
+          whitelist: true,
+        });
+
+        expect(result(props)).toEqual([base, `${base}_color_red`, `${base}_state_active`]);
+      });
+
       it('should only return modifiers from the for prop whitelist', () => {
         interface TestProps {
           color: string;
@@ -465,6 +506,157 @@ describe('Test Main Functions', () => {
           whitelist: ['color'],
         });
         expect(result(props)).toEqual([base]);
+      });
+    });
+
+    describe('ergonomic modifiers', () => {
+      it('should work without explicit generics in the direct shorthand syntax', () => {
+        const base = 'base';
+
+        const result = bmc(base, {
+          size: true,
+          isActive: flag('state', 'active'),
+          tone: variant('theme', { brand: 'primary' }),
+        });
+
+        expect(result({
+          size: 'large',
+          isActive: true,
+          tone: 'brand',
+        })).toEqual([
+          base,
+          `${base}_size_large`,
+          `${base}_state_active`,
+          `${base}_theme_primary`,
+        ]);
+      });
+
+      it('should work without explicit generics in the full settings syntax', () => {
+        const base = 'base';
+
+        const result = bmc(base, {
+          modifiers: {
+            size: true,
+            isActive: flag('state', 'active'),
+          },
+          customModifiers: {
+            tone: variant('theme', { brand: 'primary' }),
+          },
+          whitelist: true,
+        });
+
+        expect(result({
+          size: 'large',
+          isActive: true,
+          tone: 'brand',
+        })).toEqual([
+          base,
+          `${base}_size_large`,
+          `${base}_state_active`,
+          `${base}_theme_primary`,
+        ]);
+      });
+
+      it('should support direct shorthand modifiers as the second bmc argument', () => {
+        interface TestProps {
+          variant: 'primary' | 'secondary';
+          size: 'small' | 'large';
+          isActive: boolean;
+          href: string;
+        }
+
+        const base = 'base';
+
+        const result = bmc<TestProps>(base, {
+          variant: true,
+          size: true,
+          isActive: flag('state', 'active'),
+        });
+
+        expect(result({
+          variant: 'primary',
+          size: 'large',
+          isActive: true,
+          href: '/docs',
+        })).toEqual([
+          base,
+          `${base}_variant_primary`,
+          `${base}_size_large`,
+          `${base}_state_active`,
+        ]);
+      });
+
+      it('should support custom boolean and string modifiers directly in modifiers', () => {
+        interface TestProps {
+          size: 'small' | 'large';
+        }
+
+        const base = 'base';
+
+        const result = bmc<TestProps>(base, {
+          modifiers: {
+            size: true,
+            isActive: ['state', 'active'],
+            tone: ['tone', { brand: 'primary' }],
+          },
+          whitelist: true,
+        });
+
+        expect(result({ size: 'large', isActive: true, tone: 'brand' })).toEqual([
+          base,
+          `${base}_size_large`,
+          `${base}_state_active`,
+          `${base}_tone_primary`,
+        ]);
+      });
+
+      it('should support string custom modifiers in legacy customModifiers', () => {
+        interface TestProps {
+          size: 'small' | 'large';
+        }
+
+        const base = 'base';
+
+        const result = bmc<TestProps, { tone: 'brand' | 'neutral' }>(base, {
+          modifiers: {
+            size: true,
+          },
+          customModifiers: {
+            tone: ['theme', { brand: 'primary' }],
+          },
+          whitelist: true,
+        });
+
+        expect(result({ size: 'large', tone: 'brand' })).toEqual([
+          base,
+          `${base}_size_large`,
+          `${base}_theme_primary`,
+        ]);
+      });
+
+      it('should support shorthand custom modifiers in the direct syntax', () => {
+        interface TestProps {
+          size: 'small' | 'large';
+        }
+
+        const base = 'base';
+
+        const result = bmc<TestProps, { isLoading: boolean; tone: 'brand' | 'neutral' }>(base, {
+          size: true,
+          isLoading: flag('state', 'loading'),
+          tone: variant('theme', { brand: 'primary', neutral: 'secondary' }),
+        });
+
+        expect(result({
+          size: 'large',
+          isLoading: true,
+          tone: 'brand',
+        })).toEqual([
+          base,
+          `${base}_size_large`,
+          `${base}_state_loading`,
+          `${base}_theme_primary`,
+        ]);
       });
     });
 
