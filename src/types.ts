@@ -14,7 +14,7 @@ export interface ModifierKindBrand<TKind extends ModifierKind> {
 export interface PropInfo {
   modifier: string;
   type: string;
-  value: string | number | boolean | undefined | unknown;
+  value: unknown;
 }
 
 export interface PropInfoBoolean extends PropInfo {
@@ -39,8 +39,6 @@ export type BooleanModifierTuple = readonly [
   stateIfFalse?: string,
 ];
 
-export type StringModifierType<T, K extends keyof T> = T[K] extends string ? StringModifierSettings<T[K]> : never;
-
 export type StringModifierVariants<T extends string> = Partial<Record<T, string>>;
 
 export interface StringModifierSettings<T extends string | undefined> {
@@ -50,12 +48,6 @@ export interface StringModifierSettings<T extends string | undefined> {
 
 export type BrandedStringModifierSettings<T extends string | undefined> =
   StringModifierSettings<T> & ModifierKindBrand<'string'>;
-
-export type StringModifiersSettings<T> = {
-  [K in keyof T]?: StringModifierType<T, K>;
-};
-
-export type StringModifiersSettingsType<T> = StringModifiersSettings<T>[keyof T];
 
 export type StringModifierTuple<T extends string> = readonly [
   modifier?: string,

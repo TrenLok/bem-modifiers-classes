@@ -6,11 +6,10 @@ import type {
   PropInfoBoolean,
   PropInfoString,
   StringModifierDefinition,
-  StringModifierType,
   StringModifierSettings,
 } from './types';
 
-type NormalizedBooleanModifierSettings = string | BooleanModifierSettings | undefined;
+type NormalizedBooleanModifierSettings = string | BooleanModifierSettings | false | undefined;
 type NormalizedStringModifierSettings<T extends string | undefined> = string | StringModifierSettings<T> | undefined;
 
 export function toKebabCase(value: string): string {
@@ -79,9 +78,9 @@ export function getBooleanModifierClassName(
 
 export function normalizeBooleanModifierSettings(settings: BooleanModifierDefinition):
 NormalizedBooleanModifierSettings {
-  if (settings === undefined || settings === false) return;
   // `true` keeps the prop name and falls back to the default active/inactive states.
-  if (settings === true) return {};
+  if (settings === undefined || settings === true) return;
+  if (settings === false) return false;
 
   if (Array.isArray(settings)) {
     const [modifier, stateIfTrue, stateIfFalse] = settings;
@@ -96,14 +95,14 @@ export function getClassNameFromBooleanSettings(
   settings: BooleanModifierDefinition,
   propInfo: PropInfoBoolean,
 ): string | undefined {
-  if (settings === true) {
-    return getDefaultClassNameFromBoolean(base, propInfo.modifier, propInfo.value);
-  }
-
   const normalizedSettings = normalizeBooleanModifierSettings(settings);
 
   if (typeof normalizedSettings === 'string') {
     return getClassName(base, normalizedSettings, getBooleanValueStateDefault(propInfo.value));
+  }
+
+  if (normalizedSettings === false) {
+    return;
   }
 
   if (typeof normalizedSettings === 'object') {
@@ -136,13 +135,12 @@ NormalizedStringModifierSettings<T> {
   return settings as string | StringModifierSettings<T>;
 }
 
-export function getClassNameFromStringSettings<T>(
+export function getClassNameFromStringSettings(
   base: string,
-  settings: StringModifierType<T, keyof T> | StringModifierDefinition<string | undefined>,
+  settings: StringModifierDefinition<string | undefined>,
   stringProp: PropInfoString,
 ): string | undefined {
-  const stringModifierSettings = settings as StringModifierDefinition<string | undefined>;
-  const normalizedSettings = normalizeStringModifierSettings(stringModifierSettings);
+  const normalizedSettings = normalizeStringModifierSettings(settings);
 
   if (typeof normalizedSettings === 'string') {
     return getClassName(base, normalizedSettings, stringProp.value);
