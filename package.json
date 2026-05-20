@@ -42,8 +42,8 @@
     "release": "bumpp"
   },
   "devDependencies": {
-    "@commitlint/cli": "^19.6.1",
-    "@commitlint/config-conventional": "^19.6.0",
+    "@commitlint/cli": "^21.0.1",
+    "@commitlint/config-conventional": "^21.0.1",
     "@rhapsodic/eslint-config": "^1.0.4",
     "@stylistic/stylelint-config": "^2.0.0",
     "@vitest/coverage-v8": "^4.1.6",
