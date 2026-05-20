@@ -264,9 +264,7 @@ variant: { modifier: 'theme', variants: { primary: 'brand' } }
 ### Helper functions
 
 ```typescript
-booleanModifier(modifier?: string, stateIfTrue?: string, stateIfFalse?: string)
 flag(modifier?: string, stateIfTrue?: string, stateIfFalse?: string)
-stringModifier<T>(modifier?: string, variants?: Record<string, string>)
 variant<T>(modifier?: string, variants?: Record<string, string>)
 ```
 

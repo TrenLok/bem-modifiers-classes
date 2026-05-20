@@ -6,9 +6,7 @@ import {
 } from 'vitest';
 
 import {
-  booleanModifier,
   flag,
-  stringModifier,
   variant,
   bmc,
 } from '../src';
@@ -214,13 +212,9 @@ describe('Test Utility Functions', () => {
 });
 
 describe('Test Main Functions', () => {
-  describe('booleanModifier', () => {
-    it('should return the same config from flag shorthand', () => {
-      expect(flag('state', 'active', 'inactive')).toEqual(booleanModifier('state', 'active', 'inactive'));
-    });
-
+  describe('flag', () => {
     it('should return a BooleanModifierSettings object', () => {
-      const result = booleanModifier('testModifier', 'active', 'inactive');
+      const result = flag('testModifier', 'active', 'inactive');
       expect(result).toEqual({
         modifier: 'testModifier',
         stateIfTrue: 'active',
@@ -229,7 +223,7 @@ describe('Test Main Functions', () => {
     });
 
     it('should return a BooleanModifierSettings object with default states', () => {
-      const result = booleanModifier('testModifier');
+      const result = flag('testModifier');
       expect(result).toEqual({
         modifier: 'testModifier',
         stateIfTrue: undefined,
@@ -238,7 +232,7 @@ describe('Test Main Functions', () => {
     });
 
     it('should return a BooleanModifierSettings object with undefined modifier', () => {
-      const result = booleanModifier(undefined, 'active', 'inactive');
+      const result = flag(undefined, 'active', 'inactive');
       expect(result).toEqual({
         modifier: undefined,
         stateIfTrue: 'active',
@@ -247,7 +241,7 @@ describe('Test Main Functions', () => {
     });
 
     it('should return a BooleanModifierSettings object with undefined arguments', () => {
-      const result = booleanModifier();
+      const result = flag();
       expect(result).toEqual({
         modifier: undefined,
         stateIfTrue: undefined,
@@ -256,13 +250,9 @@ describe('Test Main Functions', () => {
     });
   });
 
-  describe('stringModifierSettings', () => {
-    it('should return the same config from variant shorthand', () => {
-      expect(variant('theme', { dark: 'night' })).toEqual(stringModifier('theme', { dark: 'night' }));
-    });
-
+  describe('variant', () => {
     it('should return a StringModifierSettings object', () => {
-      const result = stringModifier('testModifier', { variant1: 'value1' });
+      const result = variant('testModifier', { variant1: 'value1' });
       expect(result).toEqual({
         modifier: 'testModifier',
         variants: { variant1: 'value1' },
@@ -270,7 +260,7 @@ describe('Test Main Functions', () => {
     });
 
     it('should return a StringModifierSettings object with undefined variants', () => {
-      const result = stringModifier('testModifier');
+      const result = variant('testModifier');
       expect(result).toEqual({
         modifier: 'testModifier',
         variants: undefined,
@@ -278,7 +268,7 @@ describe('Test Main Functions', () => {
     });
 
     it('should return a StringModifierSettings object with undefined modifier', () => {
-      const result = stringModifier(undefined, { variant1: 'value1' });
+      const result = variant(undefined, { variant1: 'value1' });
       expect(result).toEqual({
         modifier: undefined,
         variants: { variant1: 'value1' },
@@ -286,7 +276,7 @@ describe('Test Main Functions', () => {
     });
 
     it('should return a StringModifierSettings object with undefined modifier and variants', () => {
-      const result = stringModifier();
+      const result = variant();
       expect(result).toEqual({
         modifier: undefined,
         variants: undefined,

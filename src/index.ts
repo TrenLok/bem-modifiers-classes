@@ -23,38 +23,12 @@ import {
   getStringModifiersSettings,
 } from './utils';
 
-export function booleanModifier(
-  modifier?: string,
-  stateIfTrue?: string,
-  stateIfFalse?: string,
-): BrandedBooleanModifierSettings {
-  return { modifier, stateIfTrue, stateIfFalse } as BrandedBooleanModifierSettings;
-}
-
 export function flag(
   modifier?: string,
   stateIfTrue?: string,
   stateIfFalse?: string,
 ): BrandedBooleanModifierSettings {
-  return booleanModifier(modifier, stateIfTrue, stateIfFalse);
-}
-
-export function stringModifier<T extends string>(
-  modifier?: string,
-  variants?: StringModifierVariants<T>,
-): BrandedStringModifierSettings<T | undefined>;
-export function stringModifier<T extends object>(
-  modifier?: string,
-  variants?: StringModifierVariants<Extract<T[keyof T], string>>,
-): BrandedStringModifierSettings<Extract<T[keyof T], string> | undefined>;
-export function stringModifier(
-  modifier?: string,
-  variants?: StringModifierVariants<string>,
-): BrandedStringModifierSettings<string | undefined> {
-  return {
-    modifier,
-    variants,
-  } as BrandedStringModifierSettings<string | undefined>;
+  return { modifier, stateIfTrue, stateIfFalse } as BrandedBooleanModifierSettings;
 }
 
 export function variant<T extends string>(
@@ -69,7 +43,10 @@ export function variant(
   modifier?: string,
   variants?: StringModifierVariants<string>,
 ): BrandedStringModifierSettings<string | undefined> {
-  return stringModifier(modifier, variants);
+  return {
+    modifier,
+    variants,
+  } as BrandedStringModifierSettings<string | undefined>;
 }
 
 type RuntimeModifiersSettings = Record<string, unknown>;
