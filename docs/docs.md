@@ -207,6 +207,19 @@ const result = classNames({
 // ['button', 'button_size_large', 'button_state_active']
 ```
 
+In direct shorthand, `modifiers` and `whitelist` are reserved setting keys.
+If you need modifier props with those names, use the explicit settings syntax:
+
+```typescript
+const classNames = bmc('button', {
+  modifiers: {
+    modifiers: true,
+    whitelist: true,
+  },
+  whitelist: true,
+});
+```
+
 ## API
 
 ```typescript
