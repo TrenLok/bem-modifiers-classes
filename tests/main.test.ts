@@ -538,8 +538,6 @@ describe('Test Main Functions', () => {
           modifiers: {
             size: true,
             isActive: flag('state', 'active'),
-          },
-          customModifiers: {
             tone: variant('theme', { brand: 'primary' }),
           },
           whitelist: true,
@@ -610,7 +608,7 @@ describe('Test Main Functions', () => {
         ]);
       });
 
-      it('should support string custom modifiers in legacy customModifiers', () => {
+      it('should support string custom modifiers in modifiers', () => {
         interface TestProps {
           size: 'small' | 'large';
         }
@@ -620,8 +618,6 @@ describe('Test Main Functions', () => {
         const result = bmc<TestProps, { tone: 'brand' | 'neutral' }>(base, {
           modifiers: {
             size: true,
-          },
-          customModifiers: {
             tone: ['theme', { brand: 'primary' }],
           },
           whitelist: true,
@@ -675,13 +671,11 @@ describe('Test Main Functions', () => {
           stateIfFalse: 'inactive',
         };
 
-        const result = bmc<TestProps>(
+        const result = bmc<TestProps, { customModifier: boolean }>(
           base,
           {
             modifiers: {
               color: undefined,
-            },
-            customModifiers: {
               customModifier: customModifier,
             },
           },
@@ -695,10 +689,10 @@ describe('Test Main Functions', () => {
           modifier: 'customModifier',
         };
 
-        const result = bmc<TestProps>(
+        const result = bmc<TestProps, { customModifier: boolean }>(
           base,
           {
-            customModifiers: {
+            modifiers: {
               customModifier: customModifier,
             },
           },
@@ -713,10 +707,10 @@ describe('Test Main Functions', () => {
           stateIfTrue: 'active',
         };
 
-        const result = bmc<TestProps>(
+        const result = bmc<TestProps, { customModifier: boolean }>(
           base,
           {
-            customModifiers: {
+            modifiers: {
               customModifier: customModifier,
             },
           },
@@ -732,25 +726,16 @@ describe('Test Main Functions', () => {
           stateIfFalse: 'inactive',
         };
 
-        const result = bmc<TestProps>(
+        const result = bmc<TestProps, { customModifier: boolean }>(
           base,
           {
-            customModifiers: {
+            modifiers: {
               customModifier: customModifier,
             },
           },
         );
 
         expect(result({ ...props, customModifier: true })).toEqual([base, `${base}_color_red`]);
-      });
-
-      it('should return a list of modifiers without a custom modifier when undefined.', () => {
-        const result = bmc<TestProps>(
-          base,
-          { customModifiers: undefined },
-        );
-
-        expect(result(props)).toEqual([base, `${base}_color_red`]);
       });
     });
   });

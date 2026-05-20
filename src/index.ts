@@ -76,7 +76,6 @@ type RuntimeModifiersSettings = Record<string, unknown>;
 
 interface RuntimeBmcSettings {
   modifiers?: RuntimeModifiersSettings;
-  customModifiers?: RuntimeModifiersSettings;
   whitelist?: readonly string[] | true;
 }
 
@@ -90,14 +89,8 @@ function hasModifierKey(
     && Object.prototype.hasOwnProperty.call(modifiersSettings, modifier));
 }
 
-function getConfiguredModifierKeys(settings?: {
-  modifiers?: Record<string, unknown>;
-  customModifiers?: Record<string, unknown>;
-}): Set<string> {
-  return new Set([
-    ...Object.keys(settings?.modifiers ?? {}),
-    ...Object.keys(settings?.customModifiers ?? {}),
-  ]);
+function getConfiguredModifierKeys(modifiers?: Record<string, unknown>): Set<string> {
+  return new Set(Object.keys(modifiers ?? {}));
 }
 
 function processStringProp(
@@ -153,7 +146,6 @@ function isBmcSettings(settings: RuntimeBmcInputSettings): settings is RuntimeBm
 
   return (
     'modifiers' in settings
-    || 'customModifiers' in settings
     || 'whitelist' in settings
   );
 }
@@ -180,11 +172,10 @@ export function bmc<const TModifiers extends InferableModifiersSettings>(
 ): (props: Partial<InferPropsFromModifiers<TModifiers>>) => string[];
 export function bmc<
   const TModifiers extends InferableModifiersSettings,
-  const TCustomModifiers extends InferableModifiersSettings = EmptyModifiers,
 >(
   base: string,
-  settings: InferredBmcSettings<TModifiers, TCustomModifiers>,
-): (props: Partial<InferPropsFromModifiers<TModifiers> & InferPropsFromModifiers<TCustomModifiers>>) => string[];
+  settings: InferredBmcSettings<TModifiers>,
+): (props: Partial<InferPropsFromModifiers<TModifiers>>) => string[];
 export function bmc(
   base: string,
   settings?: unknown,
@@ -195,10 +186,7 @@ export function bmc(
     const propsInfo = getPropsInfo(props as Record<string, unknown>);
     const classList: string[] = [base];
     const configuredModifierKeys = normalizedSettings?.whitelist === true
-      ? getConfiguredModifierKeys({
-          modifiers: normalizedSettings?.modifiers as Record<string, unknown> | undefined,
-          customModifiers: normalizedSettings?.customModifiers as Record<string, unknown> | undefined,
-        })
+      ? getConfiguredModifierKeys(normalizedSettings?.modifiers as Record<string, unknown> | undefined)
       : undefined;
 
     for (const propInfo of propsInfo) {
@@ -206,23 +194,16 @@ export function bmc(
         normalizedSettings?.modifiers as Record<string, unknown> | undefined,
         propInfo.modifier,
       );
-      const isInCustomModifiers = hasModifierKey(
-        normalizedSettings?.customModifiers as Record<string, unknown> | undefined,
-        propInfo.modifier,
-      );
-      // When both sections contain the same key, prefer `modifiers` because it is the primary API.
       const activeModifierSettings = isInModifiers
         ? normalizedSettings?.modifiers
-        : (isInCustomModifiers
-            ? normalizedSettings?.customModifiers
-            : undefined);
+        : undefined;
 
       if (normalizedSettings?.whitelist !== undefined) {
         if (normalizedSettings.whitelist === true) {
           if (!configuredModifierKeys?.has(propInfo.modifier)) {
             continue;
           }
-        } else if (!isInCustomModifiers && !normalizedSettings.whitelist.includes(propInfo.modifier)) {
+        } else if (!normalizedSettings.whitelist.includes(propInfo.modifier)) {
           continue;
         }
       }

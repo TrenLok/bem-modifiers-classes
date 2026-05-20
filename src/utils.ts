@@ -1,7 +1,6 @@
 import type {
   BooleanModifierDefinition,
   BooleanModifierSettings,
-  CustomModifiersSettings,
   ModifiersSettings,
   PropInfo,
   PropInfoBoolean,
@@ -167,7 +166,7 @@ export function getClassNameFromStringSettings<T>(
 }
 
 export function getBooleanModifierSettings<T>(
-  modifiersSettings: ModifiersSettings<T> | CustomModifiersSettings | undefined,
+  modifiersSettings: ModifiersSettings<T> | undefined,
   modifier: keyof T | string,
 ): BooleanModifierDefinition {
   if (

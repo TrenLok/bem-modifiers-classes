@@ -80,8 +80,8 @@ export type ModifierSetting<T> =
   [T] extends [boolean | undefined]
     ? BooleanModifierDefinition
     : [T] extends [string | undefined]
-      ? StringModifierDefinition<Extract<T, string> | Extract<T, undefined>>
-      : undefined;
+        ? StringModifierDefinition<Extract<T, string> | Extract<T, undefined>>
+        : undefined;
 
 export type ModifiersSettings<
   TProps,
@@ -89,12 +89,6 @@ export type ModifiersSettings<
 > = {
   [K in keyof TProps]?: ModifierSetting<TProps[K]>;
 } & {
-  [K in keyof TCustom]?: ModifierSetting<TCustom[K]>;
-};
-
-export type CustomModifiersSettings<
-  TCustom extends Record<string, ModifierPrimitiveValue> = Record<string, ModifierPrimitiveValue>,
-> = {
   [K in keyof TCustom]?: ModifierSetting<TCustom[K]>;
 };
 
@@ -108,7 +102,6 @@ export interface BmcSettings<
   TCustom extends Record<string, ModifierPrimitiveValue> = EmptyModifiers,
 > {
   modifiers?: ModifiersSettings<TProps, TCustom>;
-  customModifiers?: CustomModifiersSettings<TCustom>;
   whitelist?: PropsWhitelist<TProps, TCustom>;
 }
 
@@ -167,9 +160,7 @@ export type InferPropsFromModifiers<TModifiers extends InferableModifiersSetting
 
 export interface InferredBmcSettings<
   TModifiers extends InferableModifiersSettings = InferableModifiersSettings,
-  TCustomModifiers extends InferableModifiersSettings = InferableModifiersSettings,
 > {
   modifiers?: TModifiers;
-  customModifiers?: TCustomModifiers;
-  whitelist?: readonly (keyof TModifiers | keyof TCustomModifiers | string)[] | true;
+  whitelist?: readonly (keyof TModifiers | string)[] | true;
 }

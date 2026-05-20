@@ -224,7 +224,6 @@ bmc<TProps, TCustom = {}>(
   base: string,
   settings?: {
     modifiers?: ModifiersSettings<TProps, TCustom>;
-    customModifiers?: CustomModifiersSettings<TCustom>;
     whitelist?: PropsWhitelist<TProps, TCustom>;
   }
 )
