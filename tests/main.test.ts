@@ -394,6 +394,24 @@ describe('Test Main Functions', () => {
         expect(result(props)).toEqual([base]);
       });
 
+      it('should return a list of classes without modifiers that are configured as false', () => {
+        interface TestProps {
+          color: string;
+          isActive: boolean;
+        }
+
+        const base = 'base';
+        const props: TestProps = { color: 'red', isActive: true };
+
+        const result = bmc<TestProps>(base, {
+          modifiers: {
+            color: false,
+            isActive: false,
+          },
+        });
+        expect(result(props)).toEqual([base]);
+      });
+
       it('should return a list of classes without modifiers that are configured as undefined in variants or stateIf', () => {
         interface TestProps {
           color: string;
@@ -434,6 +452,22 @@ describe('Test Main Functions', () => {
           },
         });
         expect(result(props)).toEqual([base, `${base}_active-modifier_inactive`]);
+      });
+
+      it('should return a class list based on false boolean tuple state', () => {
+        interface TestProps {
+          isActive: boolean;
+        }
+
+        const base = 'base';
+        const props: TestProps = { isActive: false };
+
+        const result = bmc<TestProps>(base, {
+          modifiers: {
+            isActive: ['state', 'on', 'off'],
+          },
+        });
+        expect(result(props)).toEqual([base, `${base}_state_off`]);
       });
 
       it('should return only the base class if no props are provided', () => {
@@ -496,6 +530,29 @@ describe('Test Main Functions', () => {
           whitelist: ['color'],
         });
         expect(result(props)).toEqual([base]);
+      });
+
+      it('should support reserved modifier names through explicit settings syntax', () => {
+        interface TestProps {
+          modifiers: string;
+          whitelist: boolean;
+        }
+
+        const base = 'base';
+        const props: TestProps = { modifiers: 'compact', whitelist: true };
+
+        const result = bmc<TestProps>(base, {
+          modifiers: {
+            modifiers: true,
+            whitelist: true,
+          },
+          whitelist: true,
+        });
+        expect(result(props)).toEqual([
+          base,
+          `${base}_modifiers_compact`,
+          `${base}_whitelist_active`,
+        ]);
       });
     });
 
@@ -572,6 +629,31 @@ describe('Test Main Functions', () => {
           `${base}_size_large`,
           `${base}_state_active`,
         ]);
+      });
+
+      it('should keep disabled direct shorthand modifiers in the implicit whitelist', () => {
+        const base = 'base';
+
+        const result = bmc(base, {
+          color: false,
+        });
+
+        expect(result({
+          color: 'red',
+          href: '/docs',
+        })).toEqual([base]);
+      });
+
+      it('should support explicit string variant opt-out in bmc', () => {
+        const base = 'base';
+
+        const result = bmc(base, {
+          variant: variant('theme', { ghost: undefined }),
+        });
+
+        expect(result({
+          variant: 'ghost',
+        })).toEqual([base]);
       });
 
       it('should support custom boolean and string modifiers directly in modifiers', () => {
