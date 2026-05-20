@@ -47,7 +47,7 @@
     "@rhapsodic/eslint-config": "^1.0.4",
     "@stylistic/stylelint-config": "^2.0.0",
     "@vitest/coverage-v8": "^4.1.6",
-    "bumpp": "^10.0.3",
+    "bumpp": "^11.1.0",
     "eslint": "^10.4.0",
     "globals": "^15.14.0",
     "husky": "^9.1.7",
