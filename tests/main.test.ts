@@ -156,6 +156,11 @@ describe('Test Utility Functions', () => {
       const prop: PropInfoBoolean = { modifier: 'prop', type: 'boolean', value: true };
       expect(getClassNameFromBooleanSettings('base', undefined, prop)).toBe('base_prop_active');
     });
+
+    it('should return undefined when boolean settings are disabled', () => {
+      const prop: PropInfoBoolean = { modifier: 'prop', type: 'boolean', value: true };
+      expect(getClassNameFromBooleanSettings('base', false, prop)).toBe(undefined);
+    });
   });
 
   describe('getClassNameFromStringSettings', () => {
@@ -473,6 +478,18 @@ describe('Test Main Functions', () => {
         const props: object = {};
 
         const result = bmc(base);
+        expect(result(props)).toEqual([base]);
+      });
+
+      it('should return only the base class for array settings', () => {
+        interface TestProps {
+          isActive: boolean;
+        }
+
+        const base = 'base';
+        const props: TestProps = { isActive: true };
+
+        const result = bmc<TestProps>(base, [] as never);
         expect(result(props)).toEqual([base]);
       });
     });
