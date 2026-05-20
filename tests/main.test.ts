@@ -27,7 +27,7 @@ import {
   getClassNameFromStringSettings,
   getDefaultClassNameFromBoolean,
   getPropsInfo,
-  getStringModifiersSettings,
+  getStringModifierSettings,
   toKebabCase,
 } from '../src/utils';
 
@@ -203,10 +203,10 @@ describe('Test Utility Functions', () => {
     });
   });
 
-  describe('getStringModifiersSettings', () => {
+  describe('getStringModifierSettings', () => {
     it('should return the correct string modifier settings', () => {
       const settings = { test: 'testValue' } as ModifiersSettings<{ test: string }>;
-      expect(getStringModifiersSettings(settings, 'test')).toBe('testValue');
+      expect(getStringModifierSettings(settings, 'test')).toBe('testValue');
     });
   });
 });

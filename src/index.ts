@@ -20,7 +20,7 @@ import {
   getClassNameFromStringSettings,
   getDefaultClassNameFromBoolean,
   getPropsInfo,
-  getStringModifiersSettings,
+  getStringModifierSettings,
 } from './utils';
 
 export function flag(
@@ -70,19 +70,40 @@ function getConfiguredModifierKeys(modifiers?: Record<string, unknown>): Set<str
   return new Set(Object.keys(modifiers ?? {}));
 }
 
+function getConfiguredModifierSetting<TSetting>(
+  modifiersSettings: Record<string, unknown> | undefined,
+  modifier: string,
+  getModifierSettings: (
+    modifiersSettings: Record<string, unknown> | undefined,
+    modifier: string,
+  ) => TSetting,
+): {
+    modifierSettings: TSetting;
+    isDisabled: boolean;
+  } {
+  const modifierSettings = getModifierSettings(modifiersSettings, modifier);
+  return {
+    modifierSettings,
+    isDisabled: hasModifierKey(modifiersSettings, modifier) && !modifierSettings,
+  };
+}
+
 function processStringProp(
   base: string,
   propInfo: PropInfoString,
   modifiersSettings: Record<string, unknown> | undefined,
 ): string | undefined {
-  const modifierSettings = getStringModifiersSettings(
-    modifiersSettings as ModifiersSettings<Record<string, string>>,
+  const { modifierSettings, isDisabled } = getConfiguredModifierSetting(
+    modifiersSettings,
     propInfo.modifier,
+    (settings, modifier) => getStringModifierSettings(
+      settings as ModifiersSettings<Record<string, string>>,
+      modifier,
+    ),
   );
-  const isConfiguredModifier = hasModifierKey(modifiersSettings, propInfo.modifier);
 
   // A configured key with `undefined` disables class generation for that prop.
-  if (isConfiguredModifier && !modifierSettings) {
+  if (isDisabled) {
     return;
   }
 
@@ -98,14 +119,17 @@ function processBooleanProp(
   propInfo: PropInfoBoolean,
   modifiersSettings: Record<string, unknown> | undefined,
 ): string | undefined {
-  const modifierSettings = getBooleanModifierSettings(
-    modifiersSettings as ModifiersSettings<Record<string, boolean>>,
+  const { modifierSettings, isDisabled } = getConfiguredModifierSetting(
+    modifiersSettings,
     propInfo.modifier,
+    (settings, modifier) => getBooleanModifierSettings(
+      settings as ModifiersSettings<Record<string, boolean>>,
+      modifier,
+    ),
   );
-  const isConfiguredModifier = hasModifierKey(modifiersSettings, propInfo.modifier);
 
   // A configured key with `undefined` disables class generation for that prop.
-  if (isConfiguredModifier && !modifierSettings) {
+  if (isDisabled) {
     return;
   }
 

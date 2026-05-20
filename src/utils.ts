@@ -177,7 +177,7 @@ export function getBooleanModifierSettings<T>(
   return undefined;
 }
 
-export function getStringModifiersSettings<T>(
+export function getStringModifierSettings<T>(
   modifiersSettings: ModifiersSettings<T> | undefined,
   modifier: keyof T | string,
 ): StringModifierDefinition<string | undefined> {
