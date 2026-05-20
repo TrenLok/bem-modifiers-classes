@@ -45,7 +45,6 @@
     "@commitlint/cli": "^21.0.1",
     "@commitlint/config-conventional": "^21.0.1",
     "@rhapsodic/eslint-config": "^1.0.4",
-    "@stylistic/stylelint-config": "^2.0.0",
     "@vitest/coverage-v8": "^4.1.6",
     "bumpp": "^11.1.0",
     "eslint": "^10.4.0",
