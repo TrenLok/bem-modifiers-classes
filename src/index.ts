@@ -1,4 +1,4 @@
-import {
+import type {
   BmcInputSettings,
   BrandedBooleanModifierSettings,
   BrandedStringModifierSettings,
@@ -78,9 +78,9 @@ function getConfiguredModifierSetting<TSetting>(
     modifier: string,
   ) => TSetting,
 ): {
-    modifierSettings: TSetting;
-    isDisabled: boolean;
-  } {
+  modifierSettings: TSetting;
+  isDisabled: boolean;
+} {
   const modifierSettings = getModifierSettings(modifiersSettings, modifier);
   return {
     modifierSettings,

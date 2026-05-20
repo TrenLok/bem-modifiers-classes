@@ -10,7 +10,7 @@ import {
   variant,
   bmc,
 } from '../src';
-import {
+import type {
   BooleanModifierSettings,
   ModifiersSettings,
   PropInfoBoolean,
@@ -154,8 +154,6 @@ describe('Test Utility Functions', () => {
 
     it('should return the correct class name based on boolean settings incorrect type', () => {
       const prop: PropInfoBoolean = { modifier: 'prop', type: 'boolean', value: true };
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error
       expect(getClassNameFromBooleanSettings('base', undefined, prop)).toBe('base_prop_active');
     });
   });

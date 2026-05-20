@@ -46,30 +46,30 @@ export interface StringModifierSettings<T extends string | undefined> {
   variants?: Extract<T, string> extends never ? never : StringModifierVariants<Extract<T, string>>;
 }
 
-export type BrandedStringModifierSettings<T extends string | undefined> =
-  StringModifierSettings<T> & ModifierKindBrand<'string'>;
+export type BrandedStringModifierSettings<T extends string | undefined>
+  = StringModifierSettings<T> & ModifierKindBrand<'string'>;
 
 export type StringModifierTuple<T extends string> = readonly [
   modifier?: string,
   variants?: StringModifierVariants<T>,
 ];
 
-export type BooleanModifierDefinition =
-  | BooleanModifierSettings
-  | BooleanModifierTuple
-  | string
-  | boolean
-  | undefined;
+export type BooleanModifierDefinition
+  = | BooleanModifierSettings
+    | BooleanModifierTuple
+    | string
+    | boolean
+    | undefined;
 
-export type StringModifierDefinition<T extends string | undefined> =
-  | StringModifierSettings<T>
-  | StringModifierTuple<Extract<T, string>>
-  | string
-  | boolean
-  | undefined;
+export type StringModifierDefinition<T extends string | undefined>
+  = | StringModifierSettings<T>
+    | StringModifierTuple<Extract<T, string>>
+    | string
+    | boolean
+    | undefined;
 
-export type ModifierSetting<T> =
-  [T] extends [boolean | undefined]
+export type ModifierSetting<T>
+  = [T] extends [boolean | undefined]
     ? BooleanModifierDefinition
     : [T] extends [string | undefined]
         ? StringModifierDefinition<Extract<T, string> | Extract<T, undefined>>
@@ -102,21 +102,21 @@ export type BmcInputSettings<
   TCustom extends Record<string, ModifierPrimitiveValue> = EmptyModifiers,
 > = BmcSettings<TProps, TCustom> | ModifiersSettings<TProps, TCustom> | undefined;
 
-export type InferableModifierSetting =
-  | BooleanModifierDefinition
-  | StringModifierDefinition<string | undefined>
-  | BrandedBooleanModifierSettings
-  | BrandedStringModifierSettings<string | undefined>;
+export type InferableModifierSetting
+  = | BooleanModifierDefinition
+    | StringModifierDefinition<string | undefined>
+    | BrandedBooleanModifierSettings
+    | BrandedStringModifierSettings<string | undefined>;
 
 export type InferableModifiersSettings = Record<string, InferableModifierSetting | undefined>;
 
-type InferStringLiteralUnion<TVariants> =
-  Extract<keyof NonNullable<TVariants>, string> extends never
+type InferStringLiteralUnion<TVariants>
+  = Extract<keyof NonNullable<TVariants>, string> extends never
     ? string
     : Extract<keyof NonNullable<TVariants>, string>;
 
-type InferModifierTupleValue<TSetting> =
-  TSetting extends readonly [infer _Modifier, infer Second, ...infer _Rest]
+type InferModifierTupleValue<TSetting>
+  = TSetting extends readonly [infer _Modifier, infer Second, ...infer _Rest]
     ? Second extends Record<string, string | undefined>
       ? InferStringLiteralUnion<Second>
       : Second extends string | undefined
@@ -124,9 +124,9 @@ type InferModifierTupleValue<TSetting> =
         : string | boolean
     : string | boolean;
 
-export type InferModifierValue<TSetting> =
+export type InferModifierValue<TSetting>
   // Helper-returned settings are the most precise case, so resolve them first.
-  TSetting extends ModifierKindBrand<'boolean'>
+  = TSetting extends ModifierKindBrand<'boolean'>
     ? boolean
     : TSetting extends ModifierKindBrand<'string'>
       ? TSetting extends { variants?: infer TVariants }
