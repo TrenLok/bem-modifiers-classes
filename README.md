@@ -1,6 +1,6 @@
 # BEM modifier classes
 
-Utility for generating modifier classes according to the BEM methodology.
+A TypeScript utility for generating BEM modifier class names from component props.
 
 ## Installation
 
