@@ -1,5 +1,8 @@
 # BEM modifier classes 
 
+> [!WARNING]
+> This package is deprecated and has moved to [rhapsodic-dev/bem-classnames](https://github.com/rhapsodic-dev/bem-classnames).
+
 BEM modifier classes is a utility for generating modifier classes according to the BEM methodology.
 
 ## Installation
