@@ -26,7 +26,38 @@ jobs:
           node-version-file: '.nvmrc'
           cache: "pnpm"
           cache-dependency-path: 'pnpm-lock.yaml'
+          registry-url: https://registry.npmjs.org/
 
-      - run: npx changelogithub
+      - name: Install dependencies
+        run: pnpm ci
+
+      - name: Run lint
+        run: pnpm lint
+
+      - name: Run typecheck
+        run: pnpm typecheck
+
+      - name: Run tests with coverage check
+        run: pnpm vitest run --coverage --coverage.threshold=80 --coverage.reporter=text-summary
+
+      - name: Build packages
+        run: pnpm build && pnpm build:skills
+
+      - name: Validate package publish
+        run: |
+          pnpm publish --dry-run --access public --no-git-checks
+          pnpm --dir packages/skills publish --dry-run --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to NPM
+        run: |
+          pnpm publish --access public --no-git-checks
+          pnpm --dir packages/skills publish --access public --no-git-checks
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub release notes
+        run: npx changelogithub
         env:
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

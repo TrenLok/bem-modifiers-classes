@@ -1,0 +1,30 @@
+{
+  "name": "@trenlok/bem-modifier-classes-skills",
+  "version": "1.0.2",
+  "description": "Agent skills for @trenlok/bem-modifier-classes",
+  "type": "module",
+  "license": "MIT",
+  "author": "TrenLok",
+  "homepage": "https://github.com/TrenLok/bem-modifiers-classes#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TrenLok/bem-modifiers-classes.git",
+    "directory": "packages/skills"
+  },
+  "bugs": {
+    "url": "https://github.com/TrenLok/bem-modifiers-classes/issues"
+  },
+  "keywords": [
+    "bem",
+    "skills",
+    "agent-skills",
+    "bem-modifier-classes"
+  ],
+  "scripts": {
+    "build": "node build.ts"
+  },
+  "files": [
+    "skills",
+    "README.md"
+  ]
+}
